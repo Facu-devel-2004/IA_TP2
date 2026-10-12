@@ -1,0 +1,17 @@
+# Python & Jupyter
+__pycache__/
+*.py[cod]
+*$py.class
+.ipynb_checkpoints/
+
+# Virtual environments
+.venv/
+env/
+venv/
+
+# Environment variables & secrets
+.env
+*.token
+
+# Vector store cache (si se desea regenerar o ignorar archivos temporales grandes)
+# faiss_github_api_index/
