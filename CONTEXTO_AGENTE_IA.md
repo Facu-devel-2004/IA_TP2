@@ -31,8 +31,9 @@
    * **Embeddings:** `sentence-transformers/all-MiniLM-L6-v2` de Hugging Face.
    * **Vector Store:** `FAISS` con persistencia en disco (`save_local`).
    * **Retriever:** Búsqueda por similitud con $k=3$.
-   * **LLM:** `ChatOpenAI` conectado a Hugging Face Router (`https://router.huggingface.co/v1`) usando `Qwen/Qwen2.5-7B-Instruct` (o modelos alternativos como Llama-3.1).
+   * **LLM Local:** `ChatOpenAI` conectado a Ollama local (`http://localhost:11434/v1`) usando `qwen2.5:1.5b` (ligero, sin claves externas y con soporte nativo de tool calling).
    * **Conexión e Integración (LCEL):** Cadena `retriever | formatear_contexto` + `ChatPromptTemplate` con rol de especialista y regla anti-alucinación estricta + `llm` + `StrOutputParser()`.
+   * **Agente y Tools:** Herramientas con `@tool` (`consultar_documentacion_github`, `consultar_repositorio_github`, `calcular_cuota_rate_limit`) orquestadas en runtime ReAct interactivo.
 
 ---
 
@@ -44,7 +45,7 @@
 * [x] **Fase 2:** Segmentación (*Chunking*), Embeddings e Indexación con FAISS.
 * [x] **Fase 2:** Motor de Recuperación (*Retrieval*) y Validación Semántica.
 * [x] **Fase 3 - Parte 1:** Conexión e Integración (Vincular Retriever con el LLM mediante LCEL).
-* [ ] **Fase 3 - Parte 2:** **Lógica de Agente y Herramientas (*Tools*) [PENDIENTE]**.
+* [x] **Fase 3 - Parte 2:** **Lógica de Agente y Herramientas (*Tools*) [COMPLETADA]**.
 * [ ] **Entregables:** **Informe Técnico (máximo 2 páginas) [PENDIENTE]**.
 
 ---
