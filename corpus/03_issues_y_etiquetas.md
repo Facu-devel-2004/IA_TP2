@@ -1,4 +1,4 @@
-# Especificación Técnica: GitHub REST API - Gestión de Issues y Etiquetas
+# Issues y Etiquetas
 
 ## 1. Endpoints para Issues (Incidencias)
 
@@ -66,7 +66,7 @@ Los *Issues* permiten rastrear tareas, errores, mejoras y consultas en un reposi
     "labels": ["bug", "backend", "prioridad-alta"]
   }
   ```
-* **Parámetros Requeridos:**
+* **Parámetros Requeridos (campos obligatorios):**
   * `title` (string): Título breve y descriptivo del issue.
 * **Parámetros Opcionales:**
   * `body` (string): Descripción detallada en formato Markdown.
@@ -110,6 +110,15 @@ Los *Issues* permiten rastrear tareas, errores, mejoras y consultas en un reposi
       "body": "El parche fue mergeado en la rama main. Listo para testing."
     }
     ```
+
+---
+
+### 1.6 Contar Issues Abiertos sin Incluir Pull Requests (Search API)
+El campo `open_issues_count` que devuelve `GET /repos/{owner}/{repo}` suma issues **y** pull requests abiertos. Para obtener sólo los issues se usa el endpoint de búsqueda:
+* **Método y Ruta:** `GET /search/issues`
+* **Parámetro `q` (consulta):** `repo:{owner}/{repo} is:issue is:open` (para contar pull requests abiertos: `repo:{owner}/{repo} is:pr is:open`).
+* **Campo de la respuesta:** `total_count` contiene la cantidad total de resultados que coinciden.
+* **Límite:** la Search API tiene un rate limit propio de 10 solicitudes por minuto sin autenticación y 30 por minuto autenticado.
 
 ---
 

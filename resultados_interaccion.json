@@ -1,0 +1,157 @@
+{
+  "modelo_llm": "qwen2.5:7b",
+  "modelo_embeddings": "intfloat/multilingual-e5-small",
+  "evaluacion_recuperador": {
+    "Semántica all-MiniLM-L6-v2 (inglés)": {
+      "Hit@1": 0.375,
+      "Hit@4": 0.625,
+      "MRR": 0.484375
+    },
+    "Semántica multilingual-e5-small": {
+      "Hit@1": 0.6875,
+      "Hit@4": 0.9375,
+      "MRR": 0.7760416666666667
+    },
+    "Léxica BM25": {
+      "Hit@1": 0.75,
+      "Hit@4": 0.9375,
+      "MRR": 0.828125
+    },
+    "Híbrida e5 + BM25 (RRF) [elegida]": {
+      "Hit@1": 0.875,
+      "Hit@4": 0.9375,
+      "MRR": 0.890625
+    }
+  },
+  "interacciones": [
+    {
+      "pregunta": "¿Qué cabeceras HTTP se recomienda enviar en cada solicitud a la API REST de GitHub y qué ocurre si una petición no incluye el User-Agent?",
+      "acciones": [
+        {
+          "herramienta": "consultar_documentacion_github",
+          "argumentos": {
+            "consulta": "cabeceras HTTP recomendadas"
+          }
+        }
+      ],
+      "observaciones": [
+        {
+          "herramienta": "consultar_documentacion_github",
+          "resultado": "Fragmentos recuperados de la documentación. Usa sólo lo que dicen estos fragmentos; si no contienen la respuesta, indica que la documentación del corpus no incluye esa información.\n\n--- FRAGMENTO 1 | FUENTE: 01_autenticacion_y_rate_limits.md ---\n[Autenticación, Configuración y Rate Limiting > 4. Cuotas de Uso y Límites de Tasa (Rate Limiting) > 4.2 Encabezados de Respuesta para Monitoreo de Cuota]\nCada respuesta HTTP devuelta por GitHub contiene cabeceras que informan el estado exacto de la cuota:  \n* `x-ratelimit-limit`: Número máximo de solicitudes permitidas en la ventana de tiempo (ej. 5000).\n* `x-ratelimit-remaining`: Número de solicitudes disponibles restantes en la ventana actual.\n* `x-ratelimit-reset`: Marca de tiempo en formato Epoch Unix (segundos desde el 1 de enero de 1970 UTC) en la que se reiniciará la cuota.\n* `x-ratelimit-used`: Cantidad de solicitudes ya consumidas en la ventana presente.\n\n--- FRAGMENTO 2 | FUENTE: 01_autenticacion_y_rate_limits.md ---\n[Autenticación, Configuración y Rate Limiting > 2. Encabezados HTTP Estándar]\nPara garantizar la compatibilidad y consistencia en las respuestas, se recomienda que cada solicitud a la API REST de GitHub incluya los siguientes encabezados. El único estrictamente obligatorio es `User-Agent`; `Authorization` sólo es necesario en peticiones autenticadas, y `Accept` y `X-GitHub-Api-Version` son los valores recomendados por GitHub:  \n| Encabezado | Valor Recomendado | Propósito |\n| :--- | :--- | :--- |\n| `Accept` | `application/vnd.github+json` | Especifica la versión del tipo de medio oficial de GitHub para respuestas JSON. |\n| `Authorization` | `Bearer <TOKEN_PERSONAL>` | Proporciona las credenciales de acceso para peticiones autenticadas. |\n| `X-GitHub-Api-Version` | `2022-11-28` | Fija la versión de la especificación de la API para evitar incompatibilidades. |\n| `User-Agent` | `<NOMBRE_APLICACION_O_USUARIO>` | Obligatorio por política de GitHub. Peticiones sin `User-Agent` son rechazadas con error HTTP 403. |\n\n--- FRAGMENTO 3 | FUENTE: 01_autenticacion_y_rate_limits.md ---\n[Autenticación, Configuración y Rate Limiting > 5. Códigos de Estado HTTP y Manejo de Errores]\n| Código HTTP | Descripción Oficial | Diagnóstico y Acción Requerida |\n| :--- | :--- | :--- |\n| 200 OK | Solicitud exitosa | Operación completada; el cuerpo contiene los datos solicitados. |\n| 201 Created | Recurso creado | Operaciones `POST` exitosas (creación de repo, issue, etc.). |\n| 204 No Content | Operación exitosa sin cuerpo | Típico en eliminación (`DELETE`) o acciones sin datos de retorno. |\n| 304 Not Modified | Caché válida | No hay cambios en el recurso (usando cabeceras `If-None-Match`). |\n| 401 Unauthorized | Autenticación requerida o fallida | Token inválido, expirado, malformado o ausente. |\n| 403 Forbidden | Acceso prohibido / Rate limit excedido | Token sin permisos para el recurso o cuota de rate limit en 0. |\n| 429 Too Many Requests | Demasiadas solicitudes | Rate limit primario o secundario excedido; esperar hasta `x-ratelimit-reset` (o lo indicado en `retry-after`) antes de reintentar. |\n| 404 Not Found | Recurso inexistente o privado | El recurso no existe o el token no tiene visibilidad sobre él. |\n| 422 Unprocessable Entity | Error de validación semántica | El JSON enviado contiene campos inválidos, faltan obligatorios o formato erróneo. |\n\n--- FRAGMENTO 4 | FUENTE: 01_autenticacion_y_rate_limits.md ---\n[Autenticación, Configuración y Rate Limiting > 2. Encabezados HTTP Estándar > Ejemplo de Solicitud HTTP con cURL:]\n```bash\ncurl -L \\\n-H \"Accept: application/vnd.github+json\" \\\n-H \"Authorization: Bearer ghp_ejemploToken123456\" \\\n-H \"X-GitHub-Api-Version: 2022-11-28\" \\\n-H \"User-Agent: MiApp-Cliente-IA\" \\\nhttps://api.github.com/user\n```"
+        }
+      ],
+      "respuesta": "En cada solicitud a la API REST de GitHub se recomienda incluir los siguientes encabezados:\n\n- `Accept`: `application/vnd.github+json` (Especifica la versión del tipo de medio oficial de GitHub para respuestas JSON).\n- `Authorization`: `Bearer <TOKEN_PERSONAL>` (Proporciona las credenciales de acceso para peticiones autenticadas).\n- `X-GitHub-Api-Version`: `2022-11-28` (Fija la versión de la especificación de la API para evitar incompatibilidades).\n- `User-Agent`: `<NOMBRE_APLICACION_O_USUARIO>` (Obligatorio por política de GitHub. Peticiones sin `User-Agent` son rechazadas con error HTTP 403).\n\nSi una petición no incluye el encabezado `User-Agent`, la solicitud será rechazada con un código de estado HTTP 403 (Acceso prohibido / Rate limit excedido).\n\n[Fuente: 01_autenticacion_y_rate_limits.md]",
+      "segundos": 86.4
+    },
+    {
+      "pregunta": "Mi script hace 80 solicitudes por hora a la API de GitHub sin token. ¿Supera el límite? ¿Y si uso un token personal? ¿Qué código de error devolvería GitHub al excederlo?",
+      "acciones": [
+        {
+          "herramienta": "calcular_cuota_rate_limit",
+          "argumentos": {
+            "solicitudes_por_hora": 80,
+            "autenticado": false
+          }
+        },
+        {
+          "herramienta": "calcular_cuota_rate_limit",
+          "argumentos": {
+            "autenticado": true,
+            "solicitudes_por_hora": 80
+          }
+        },
+        {
+          "herramienta": "consultar_documentacion_github",
+          "argumentos": {
+            "consulta": "códigos de error de la API de GitHub"
+          }
+        }
+      ],
+      "observaciones": [
+        {
+          "herramienta": "calcular_cuota_rate_limit",
+          "resultado": "{\n  \"resumen\": \"80 solicitudes por hora sin autenticar SUPERAN el límite de 60 por hora (133.3% de la cuota, 20 solicitudes de exceso).\",\n  \"tipo_de_acceso\": \"sin autenticar\",\n  \"limite_por_hora\": 60,\n  \"solicitudes_planificadas\": 80,\n  \"porcentaje_de_cuota\": \"133.3%\",\n  \"solicitudes_restantes\": 0,\n  \"solicitudes_excedentes\": 20,\n  \"intervalo_minimo_entre_solicitudes_seg\": 60.0\n}"
+        },
+        {
+          "herramienta": "calcular_cuota_rate_limit",
+          "resultado": "{\n  \"resumen\": \"80 solicitudes por hora con token están DENTRO del límite de 5000 por hora (1.6% de la cuota; quedan 4920 disponibles).\",\n  \"tipo_de_acceso\": \"con token\",\n  \"limite_por_hora\": 5000,\n  \"solicitudes_planificadas\": 80,\n  \"porcentaje_de_cuota\": \"1.6%\",\n  \"solicitudes_restantes\": 4920,\n  \"solicitudes_excedentes\": 0,\n  \"intervalo_minimo_entre_solicitudes_seg\": 0.72\n}"
+        },
+        {
+          "herramienta": "consultar_documentacion_github",
+          "resultado": "Fragmentos recuperados de la documentación. Usa sólo lo que dicen estos fragmentos; si no contienen la respuesta, indica que la documentación del corpus no incluye esa información.\n\n--- FRAGMENTO 1 | FUENTE: 01_autenticacion_y_rate_limits.md ---\n[Autenticación, Configuración y Rate Limiting > 2. Encabezados HTTP Estándar]\nPara garantizar la compatibilidad y consistencia en las respuestas, se recomienda que cada solicitud a la API REST de GitHub incluya los siguientes encabezados. El único estrictamente obligatorio es `User-Agent`; `Authorization` sólo es necesario en peticiones autenticadas, y `Accept` y `X-GitHub-Api-Version` son los valores recomendados por GitHub:  \n| Encabezado | Valor Recomendado | Propósito |\n| :--- | :--- | :--- |\n| `Accept` | `application/vnd.github+json` | Especifica la versión del tipo de medio oficial de GitHub para respuestas JSON. |\n| `Authorization` | `Bearer <TOKEN_PERSONAL>` | Proporciona las credenciales de acceso para peticiones autenticadas. |\n| `X-GitHub-Api-Version` | `2022-11-28` | Fija la versión de la especificación de la API para evitar incompatibilidades. |\n| `User-Agent` | `<NOMBRE_APLICACION_O_USUARIO>` | Obligatorio por política de GitHub. Peticiones sin `User-Agent` son rechazadas con error HTTP 403. |\n\n--- FRAGMENTO 2 | FUENTE: 01_autenticacion_y_rate_limits.md ---\n[Autenticación, Configuración y Rate Limiting > 1. Visión General de la API]\nLa API REST de GitHub permite a los desarrolladores interactuar mediante programación con repositorios, organizaciones, usuarios y flujos de trabajo de GitHub. Todas las solicitudes deben realizarse a través de HTTPS.  \n* URL Base Oficial: `https://api.github.com`\n* Formato de Intercambio de Datos: JSON (JavaScript Object Notation) para solicitudes y respuestas.\n* Versión de la API: Se recomienda fijar la versión mediante el encabezado HTTP correspondiente. La versión actual estable es `2022-11-28`.\n\n--- FRAGMENTO 3 | FUENTE: 01_autenticacion_y_rate_limits.md ---\n[Autenticación, Configuración y Rate Limiting > 2. Encabezados HTTP Estándar > Ejemplo de Solicitud HTTP con cURL:]\n```bash\ncurl -L \\\n-H \"Accept: application/vnd.github+json\" \\\n-H \"Authorization: Bearer ghp_ejemploToken123456\" \\\n-H \"X-GitHub-Api-Version: 2022-11-28\" \\\n-H \"User-Agent: MiApp-Cliente-IA\" \\\nhttps://api.github.com/user\n```\n\n--- FRAGMENTO 4 | FUENTE: 01_autenticacion_y_rate_limits.md ---\n[Autenticación, Configuración y Rate Limiting > 4. Cuotas de Uso y Límites de Tasa (Rate Limiting) > 4.1 Tipos de Límites Principales]\n1. Peticiones no autenticadas:\n* Límite: 60 solicitudes por hora por dirección IP de origen.\n* Aplica a consultas públicas generales.\n2. Peticiones autenticadas (Tokens Personales / OAuth):\n* Límite: 5,000 solicitudes por hora por usuario autenticado.\n* Aplica a todos los endpoints regulares de la REST API.\n3. Límite de Búsqueda (Search API):\n* Límite dedicado y separado de los endpoints regulares.\n* Autenticado: 30 solicitudes por minuto.\n* No autenticado: 10 solicitudes por minuto.  \n* Al exceder el límite: GitHub responde con `403 Forbidden` o `429 Too Many Requests` y `x-ratelimit-remaining` en `0`. Las solicitudes vuelven a aceptarse cuando se alcanza el instante indicado en `x-ratelimit-reset`."
+        }
+      ],
+      "respuesta": "La API de GitHub sin token recibe 80 solicitudes por hora, lo que supera el límite de 60 solicitudes por hora (133.3% de la cuota, 20 solicitudes de exceso).\n\nSi se usa un token personal, las 80 solicitudes por hora están dentro del límite de 5000 por hora (1.6% de la cuota; quedan 4920 disponibles).\n\nGitHub devolvería un código de error `429 Too Many Requests` al exceder el límite de solicitudes. Este código indica que se ha superado el límite de tasa permitido y que se debe esperar hasta que se recupere la cuota. Además, el encabezado `x-ratelimit-remaining` se establecerá en `0` y el encabezado `x-ratelimit-reset` indicará el instante en que se puede volver a hacer solicitudes.\n\n[Fuente: 01_autenticacion_y_rate_limits.md]",
+      "segundos": 82.3
+    },
+    {
+      "pregunta": "¿Cuántas estrellas, forks, issues abiertos y pull requests abiertos tiene actualmente el repositorio facebook/react, y cuál es su lenguaje principal?",
+      "acciones": [
+        {
+          "herramienta": "consultar_repositorio_github",
+          "argumentos": {
+            "owner": "facebook",
+            "repo": "react"
+          }
+        }
+      ],
+      "observaciones": [
+        {
+          "herramienta": "consultar_repositorio_github",
+          "resultado": "{\n  \"fuente\": \"datos obtenidos en vivo de la API de GitHub\",\n  \"repositorio\": \"react/react\",\n  \"nota\": \"GitHub redirigió 'facebook/react' a 'react/react' (el repositorio fue transferido o renombrado).\",\n  \"descripcion\": \"The library for web and native user interfaces.\",\n  \"lenguaje_principal\": \"JavaScript\",\n  \"estrellas\": 251223,\n  \"forks\": 51516,\n  \"issues_abiertos\": 880,\n  \"pull_requests_abiertos\": 579,\n  \"ultimo_push\": \"2026-10-15T08:14:36Z\",\n  \"consultado\": \"2026-10-17 22:42 (hora local)\",\n  \"url\": \"https://github.com/react/react\"\n}"
+        }
+      ],
+      "respuesta": "El repositorio actualmente tiene 251,223 estrellas, 51,516 forks, 880 issues abiertos y 579 pull requests abiertos. Su lenguaje principal es JavaScript. [Fuente: datos obtenidos en vivo de la API de GitHub]",
+      "segundos": 22.7
+    },
+    {
+      "pregunta": "¿Qué método HTTP y qué endpoint se usan para crear un issue, qué campo es obligatorio, y cuántos issues abiertos tiene hoy el repositorio facebook/react?",
+      "acciones": [
+        {
+          "herramienta": "consultar_documentacion_github",
+          "argumentos": {
+            "consulta": "método HTTP y endpoint para crear un issue, campo obligatorio"
+          }
+        },
+        {
+          "herramienta": "consultar_repositorio_github",
+          "argumentos": {
+            "owner": "facebook",
+            "repo": "react"
+          }
+        }
+      ],
+      "observaciones": [
+        {
+          "herramienta": "consultar_documentacion_github",
+          "resultado": "Fragmentos recuperados de la documentación. Usa sólo lo que dicen estos fragmentos; si no contienen la respuesta, indica que la documentación del corpus no incluye esa información.\n\n--- FRAGMENTO 1 | FUENTE: 03_issues_y_etiquetas.md ---\n[Issues y Etiquetas > 1. Endpoints para Issues (Incidencias) > 1.2 Crear un Issue]\n* Método y Ruta: `POST /repos/{owner}/{repo}/issues`\n* Código de respuesta exitosa: `201 Created`\n* Cuerpo de la Solicitud (JSON Payload):\n```json\n{\n\"title\": \"Falla de autenticación en endpoint /user/repos\",\n\"body\": \"Al enviar un token expirado, el mensaje devuelto debe ser 401 en lugar de 403.\",\n\"assignees\": [\"octocat\"],\n\"milestone\": 1,\n\"labels\": [\"bug\", \"backend\", \"prioridad-alta\"]\n}\n```\n* Parámetros Requeridos (campos obligatorios):\n* `title` (string): Título breve y descriptivo del issue.\n* Parámetros Opcionales:\n* `body` (string): Descripción detallada en formato Markdown.\n* `assignees` (array de strings): Nombres de usuario de GitHub para asignar la tarea.\n* `milestone` (integer): Número identificador del hito de entrega.\n* `labels` (array de strings): Nombres de las etiquetas a asociar.\n\n--- FRAGMENTO 2 | FUENTE: 03_issues_y_etiquetas.md ---\n[Issues y Etiquetas > 1. Endpoints para Issues (Incidencias) > 1.5 Comentarios en un Issue]\n* Listar comentarios de un issue:\n* Método y Ruta: `GET /repos/{owner}/{repo}/issues/{issue_number}/comments`\n* Crear un nuevo comentario:\n* Método y Ruta: `POST /repos/{owner}/{repo}/issues/{issue_number}/comments`\n* Cuerpo de la Solicitud:\n```json\n{\n\"body\": \"El parche fue mergeado en la rama main. Listo para testing.\"\n}\n```\n\n--- FRAGMENTO 3 | FUENTE: 03_issues_y_etiquetas.md ---\n[Issues y Etiquetas > 1. Endpoints para Issues (Incidencias) > 1.6 Contar Issues Abiertos sin Incluir Pull Requests (Search API)]\nEl campo `open_issues_count` que devuelve `GET /repos/{owner}/{repo}` suma issues y pull requests abiertos. Para obtener sólo los issues se usa el endpoint de búsqueda:\n* Método y Ruta: `GET /search/issues`\n* Parámetro `q` (consulta): `repo:{owner}/{repo} is:issue is:open` (para contar pull requests abiertos: `repo:{owner}/{repo} is:pr is:open`).\n* Campo de la respuesta: `total_count` contiene la cantidad total de resultados que coinciden.\n* Límite: la Search API tiene un rate limit propio de 10 solicitudes por minuto sin autenticación y 30 por minuto autenticado.\n\n--- FRAGMENTO 4 | FUENTE: 04_pull_requests_y_revisiones.md ---\n[Pull Requests y Revisiones de Código > 1. Endpoints para Pull Requests > 1.2 Crear un Pull Request]\n* Método y Ruta: `POST /repos/{owner}/{repo}/pulls`\n* Código de respuesta exitosa: `201 Created`\n* Cuerpo de la Solicitud (JSON Payload):\n```json\n{\n\"title\": \"Implementación de ChromaDB en pipeline de RAG\",\n\"body\": \"Este PR introduce el motor de búsqueda vectorial usando ChromaDB y embeddings locales.\",\n\"head\": \"feature/chroma-rag\",\n\"base\": \"main\",\n\"draft\": false,\n\"maintainer_can_modify\": true\n}\n```\n* Parámetros Requeridos (campos obligatorios):\n* `title` (string): Título descriptivo del Pull Request.\n* `head` (string): Nombre de la rama que contiene los cambios que se desean integrar. Si la rama proviene de un fork, debe tener el formato `nombre_usuario:rama`.\n* `base` (string): Nombre de la rama en la que se integrarán los cambios (ej. `main`).\n* Parámetros Opcionales:\n* `body` (string): Descripción detallada del PR en Markdown.\n* `draft` (boolean): `true` para crear el PR en estado borrador (*draft*).\n* `maintainer_can_modify` (boolean): Permite que los mantenedores del repositorio base hagan commits en la rama origen."
+        },
+        {
+          "herramienta": "consultar_repositorio_github",
+          "resultado": "{\n  \"fuente\": \"datos obtenidos en vivo de la API de GitHub\",\n  \"repositorio\": \"react/react\",\n  \"nota\": \"GitHub redirigió 'facebook/react' a 'react/react' (el repositorio fue transferido o renombrado).\",\n  \"descripcion\": \"The library for web and native user interfaces.\",\n  \"lenguaje_principal\": \"JavaScript\",\n  \"estrellas\": 251223,\n  \"forks\": 51516,\n  \"issues_abiertos\": 880,\n  \"pull_requests_abiertos\": 579,\n  \"ultimo_push\": \"2026-10-15T08:14:36Z\",\n  \"consultado\": \"2026-10-17 22:43 (hora local)\",\n  \"url\": \"https://github.com/react/react\"\n}"
+        }
+      ],
+      "respuesta": "Para crear un issue, se utiliza el método HTTP `POST` y el endpoint `/repos/{owner}/{repo}/issues`. Los campos obligatorios son `title` (título breve y descriptivo del issue). [Fuente: 03_issues_y_etiquetas.md]\n\nEl repositorio facebook/react tiene actualmente 880 issues abiertos. [Fuente: datos obtenidos en vivo de la API de GitHub]",
+      "segundos": 56.2
+    },
+    {
+      "pregunta": "Según la documentación, ¿qué endpoint se usa para crear un webhook en un repositorio?",
+      "acciones": [
+        {
+          "herramienta": "consultar_documentacion_github",
+          "argumentos": {
+            "consulta": "endpoint para crear un webhook en un repositorio"
+          }
+        }
+      ],
+      "observaciones": [
+        {
+          "herramienta": "consultar_documentacion_github",
+          "resultado": "Fragmentos recuperados de la documentación. Usa sólo lo que dicen estos fragmentos; si no contienen la respuesta, indica que la documentación del corpus no incluye esa información.\n\n--- FRAGMENTO 1 | FUENTE: 04_pull_requests_y_revisiones.md ---\n[Pull Requests y Revisiones de Código > 1. Endpoints para Pull Requests > 1.2 Crear un Pull Request]\n* Método y Ruta: `POST /repos/{owner}/{repo}/pulls`\n* Código de respuesta exitosa: `201 Created`\n* Cuerpo de la Solicitud (JSON Payload):\n```json\n{\n\"title\": \"Implementación de ChromaDB en pipeline de RAG\",\n\"body\": \"Este PR introduce el motor de búsqueda vectorial usando ChromaDB y embeddings locales.\",\n\"head\": \"feature/chroma-rag\",\n\"base\": \"main\",\n\"draft\": false,\n\"maintainer_can_modify\": true\n}\n```\n* Parámetros Requeridos (campos obligatorios):\n* `title` (string): Título descriptivo del Pull Request.\n* `head` (string): Nombre de la rama que contiene los cambios que se desean integrar. Si la rama proviene de un fork, debe tener el formato `nombre_usuario:rama`.\n* `base` (string): Nombre de la rama en la que se integrarán los cambios (ej. `main`).\n* Parámetros Opcionales:\n* `body` (string): Descripción detallada del PR en Markdown.\n* `draft` (boolean): `true` para crear el PR en estado borrador (*draft*).\n* `maintainer_can_modify` (boolean): Permite que los mantenedores del repositorio base hagan commits en la rama origen.\n\n--- FRAGMENTO 2 | FUENTE: 02_repositorios_y_ramas.md ---\n[Repositorios y Ramas > 1. Endpoints para Repositorios > 1.3 Crear un Repositorio]\n* Crear en la cuenta del usuario autenticado:\n* Método y Ruta: `POST /user/repos`\n* Código de respuesta exitosa: `201 Created`\n* Cuerpo de la Solicitud (JSON Payload):\n```json\n{\n\"name\": \"nuevo-proyecto-ia\",\n\"description\": \"Repositorio creado mediante la API REST de GitHub\",\n\"private\": false,\n\"has_issues\": true,\n\"has_projects\": true,\n\"has_wiki\": false,\n\"auto_init\": true,\n\"gitignore_template\": \"Python\",\n\"license_template\": \"mit\"\n}\n```\n* Parámetros Requeridos (campos obligatorios):\n* `name` (string): Nombre del repositorio.\n* Parámetros Opcionales Clave:\n* `private` (boolean): `true` para repositorio privado, `false` para público.\n* `auto_init` (boolean): `true` para inicializar automáticamente con un archivo `README.md`.\n* `gitignore_template` (string): Nombre de la plantilla de `.gitignore` (ej. `Python`, `Node`).\n* `license_template` (string): Licencia open-source (ej. `mit`, `apache-2.0`, `gpl-3.0`).  \n* Crear en una Organización:\n* Método y Ruta: `POST /orgs/{org}/repos`\n\n--- FRAGMENTO 3 | FUENTE: 02_repositorios_y_ramas.md ---\n[Repositorios y Ramas > 3. Endpoints para Releases (Lanzamientos de Versiones) > 3.2 Crear un Release]\n* Método y Ruta: `POST /repos/{owner}/{repo}/releases`\n* Cuerpo de la Solicitud (JSON):\n```json\n{\n\"tag_name\": \"v1.0.0\",\n\"target_commitish\": \"main\",\n\"name\": \"Versión 1.0.0 Oficial\",\n\"body\": \"Notas de la versión con las nuevas características de IA.\",\n\"draft\": false,\n\"prerelease\": false,\n\"generate_release_notes\": true\n}\n```\n\n--- FRAGMENTO 4 | FUENTE: 03_issues_y_etiquetas.md ---\n[Issues y Etiquetas > 1. Endpoints para Issues (Incidencias) > 1.5 Comentarios en un Issue]\n* Listar comentarios de un issue:\n* Método y Ruta: `GET /repos/{owner}/{repo}/issues/{issue_number}/comments`\n* Crear un nuevo comentario:\n* Método y Ruta: `POST /repos/{owner}/{repo}/issues/{issue_number}/comments`\n* Cuerpo de la Solicitud:\n```json\n{\n\"body\": \"El parche fue mergeado en la rama main. Listo para testing.\"\n}\n```"
+        }
+      ],
+      "respuesta": "La documentación del corpus no contiene información sobre un endpoint específico para crear un webhook en un repositorio.",
+      "segundos": 33.0
+    }
+  ]
+}

@@ -1,4 +1,4 @@
-# Especificación Técnica: GitHub REST API - Autenticación, Configuración y Rate Limiting
+# Autenticación, Configuración y Rate Limiting
 
 ## 1. Visión General de la API
 La API REST de GitHub permite a los desarrolladores interactuar mediante programación con repositorios, organizaciones, usuarios y flujos de trabajo de GitHub. Todas las solicitudes deben realizarse a través de HTTPS.
@@ -9,8 +9,8 @@ La API REST de GitHub permite a los desarrolladores interactuar mediante program
 
 ---
 
-## 2. Encabezados HTTP Estándar Obligatorios
-Para garantizar la compatibilidad y consistencia en las respuestas, cada solicitud a la API REST de GitHub debe incluir los siguientes encabezados:
+## 2. Encabezados HTTP Estándar
+Para garantizar la compatibilidad y consistencia en las respuestas, se recomienda que cada solicitud a la API REST de GitHub incluya los siguientes encabezados. El único estrictamente obligatorio es `User-Agent`; `Authorization` sólo es necesario en peticiones autenticadas, y `Accept` y `X-GitHub-Api-Version` son los valores recomendados por GitHub:
 
 | Encabezado | Valor Recomendado | Propósito |
 | :--- | :--- | :--- |
@@ -61,6 +61,8 @@ GitHub aplica límites estrictos para proteger la infraestructura y garantizar e
    * Autenticado: **30 solicitudes por minuto**.
    * No autenticado: **10 solicitudes por minuto**.
 
+* **Al exceder el límite:** GitHub responde con `403 Forbidden` o `429 Too Many Requests` y `x-ratelimit-remaining` en `0`. Las solicitudes vuelven a aceptarse cuando se alcanza el instante indicado en `x-ratelimit-reset`.
+
 ### 4.2 Encabezados de Respuesta para Monitoreo de Cuota
 Cada respuesta HTTP devuelta por GitHub contiene cabeceras que informan el estado exacto de la cuota:
 
@@ -105,5 +107,6 @@ Para consultar el estado de la cuota sin consumir solicitudes del límite genera
 | **304 Not Modified** | Caché válida | No hay cambios en el recurso (usando cabeceras `If-None-Match`). |
 | **401 Unauthorized** | Autenticación requerida o fallida | Token inválido, expirado, malformado o ausente. |
 | **403 Forbidden** | Acceso prohibido / Rate limit excedido | Token sin permisos para el recurso o cuota de rate limit en 0. |
+| **429 Too Many Requests** | Demasiadas solicitudes | Rate limit primario o secundario excedido; esperar hasta `x-ratelimit-reset` (o lo indicado en `retry-after`) antes de reintentar. |
 | **404 Not Found** | Recurso inexistente o privado | El recurso no existe o el token no tiene visibilidad sobre él. |
 | **422 Unprocessable Entity** | Error de validación semántica | El JSON enviado contiene campos inválidos, faltan obligatorios o formato erróneo. |

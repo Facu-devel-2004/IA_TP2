@@ -1,97 +1,30 @@
-# Guía Rápida: Instalación y Configuración de Ollama (Modelo Local)
+# Guía: instalación de Ollama y del modelo local
 
-Esta guía explica paso a paso cómo instalar **Ollama** y descargar el modelo local **`qwen2.5:1.5b`** para ejecutar el pipeline de RAG y el Agente de este Trabajo de Laboratorio sin depender de claves de API externas (como OpenAI o Hugging Face) ni conexiones de red para la inferencia.
+El agente usa un modelo de lenguaje que corre **en la propia computadora** mediante **Ollama**. No requiere claves de API ni conexión a internet para generar respuestas (sí para la herramienta que consulta GitHub en vivo).
 
----
+> En Windows, `instalar.bat` hace todos estos pasos automáticamente. Esta guía es para instalarlo a mano o en Linux/macOS.
 
-## 1. ¿Por qué usamos este modelo?
-* **Modelo:** `qwen2.5:1.5b` (1.5 mil millones de parámetros).
-* **Tamaño en disco:** ~986 MB.
-* **Consumo de memoria:** ~1.5 GB de RAM / VRAM.
-* **Ventajas:** Funciona de forma muy fluida en cualquier computadora (CPU estándar o placa gráfica), tiene soporte nativo para *Tool Calling* (llamada a herramientas del Agente) y es 100% gratuito y privado.
+## 1. Modelo elegido
 
----
+| Modelo | Descarga | RAM aprox. | Uso recomendado |
+| :--- | :--- | :--- | :--- |
+| `qwen2.5:7b` (por defecto) | 4,7 GB | 5,5 GB | Mejores respuestas y elección de herramientas más confiable |
+| `qwen2.5:3b` | 1,9 GB | 2,5 GB | Equipos con 8 GB de RAM; unas 3 veces más rápido |
 
-## 2. Instalación de Ollama
+Ambos admiten *tool calling* (necesario para el agente). Sin placa de video, el modelo corre en el procesador: con `qwen2.5:7b` cada respuesta del agente tarda entre 1 y 4 minutos.
 
-Elegí las instrucciones correspondientes a tu sistema operativo:
+## 2. Instalar Ollama
 
-### 🐧 Linux (Ubuntu, Debian, Arch, Fedora, etc.)
-Abrí una terminal y ejecutá:
-```bash
-curl -fsSL https://ollama.com/install.sh | sh
-```
-*Ollama se instalará y se iniciará automáticamente como servicio del sistema.*
+* **Windows:** descargar el instalador de https://ollama.com/download/windows o ejecutar `winget install Ollama.Ollama`. Necesita unos 4 GB de disco. Para instalarlo en otro disco: `OllamaSetup.exe /DIR="D:\Ollama"`; para guardar los modelos en otra carpeta, crear la variable de entorno de usuario `OLLAMA_MODELS`.
+* **Linux:** `curl -fsSL https://ollama.com/install.sh | sh`
+* **macOS:** descargar desde https://ollama.com/download/mac o `brew install ollama`.
 
-Si necesitás verificar el estado del servicio:
-```bash
-systemctl status ollama
-```
-
----
-
-### 🪟 Windows
-1. Descargá el instalador oficial desde [https://ollama.com/download/windows](https://ollama.com/download/windows).
-2. Ejecutá el archivo `OllamaSetup.exe` y seguí las instrucciones en pantalla.
-3. Al finalizar, Ollama se ejecutará automáticamente en la bandeja del sistema (ícono junto al reloj).
-
----
-
-### 🍏 macOS
-1. Descargá el instalador desde [https://ollama.com/download/mac](https://ollama.com/download/mac) o instalalo con Homebrew:
-```bash
-brew install ollama
-```
-2. Ejecutá la aplicación Ollama desde la carpeta Aplicaciones.
-
----
-
-## 3. Descarga del Modelo `qwen2.5:1.5b`
-
-Una vez instalado Ollama, abrí tu terminal (en Windows podés usar PowerShell o CMD) y ejecutá el siguiente comando para descargar el modelo:
+## 3. Descargar el modelo y verificar
 
 ```bash
-ollama pull qwen2.5:1.5b
+ollama pull qwen2.5:7b
+ollama list                      # debe aparecer qwen2.5:7b
+ollama run qwen2.5:7b "Hola"     # prueba rápida (opcional)
 ```
 
-*(Opcional)* Si querés probarlo directamente en la terminal para chatear con él:
-```bash
-ollama run qwen2.5:1.5b
-```
-*(Para salir de la consola de chat de Ollama, escribí `/bye`).*
-
----
-
-## 4. Verificación de Funcionamiento
-
-1. **Listar modelos instalados:**
-   ```bash
-   ollama list
-   ```
-   Deberías ver una salida similar a:
-   ```text
-   NAME            ID              SIZE      MODIFIED
-   qwen2.5:1.5b    65ec06548149    986 MB    ...
-   ```
-
-2. **Verificar que la API local esté escuchando:**
-   Abrí tu navegador web o ejecutá en la terminal:
-   ```bash
-   curl http://localhost:11434
-   ```
-   Debe responder:
-   ```text
-   Ollama is running
-   ```
-
----
-
-## 5. Librerías de Python Requeridas en el Proyecto
-
-Para conectar el notebook con tu Ollama local, asegurate de tener instaladas las dependencias de LangChain en tu entorno virtual:
-
-```bash
-pip install -q langchain langchain-community langchain-ollama langchain-openai
-```
-
-El notebook se conectará automáticamente al endpoint local `http://localhost:11434`.
+Ollama queda escuchando en `http://localhost:11434`. Para usar otro modelo sin modificar el código: definir `OLLAMA_MODEL=qwen2.5:3b` antes de ejecutar el notebook o `agente_cli.py`.

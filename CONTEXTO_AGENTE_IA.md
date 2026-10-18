@@ -21,19 +21,18 @@
 1. **Dominio Técnico Seleccionado:** **GitHub REST API (v3 / versión 2022-11-28)**.
    * *Razón:* Es un dominio formal, estructurado y acotado, ideal para RAG porque los LLMs suelen alucinar parámetros o rutas exactas de endpoints.
 2. **Corpus de Documentación (`corpus/`):**
-   * `01_autenticacion_y_rate_limits.md`: Base URL, headers requeridos (`User-Agent`, `Authorization`, etc.), cuotas (60/5000 req/h) y códigos HTTP.
+   * `01_autenticacion_y_rate_limits.md`: Base URL, cabeceras recomendadas (`User-Agent` como única estrictamente obligatoria, `Authorization`, `Accept`, `X-GitHub-Api-Version`), cuotas (60/5000 req/h) y códigos HTTP (incluyendo `403` y `429 Too Many Requests`).
    * `02_repositorios_y_ramas.md`: Endpoints de creación, listado, configuración de repositorios, branches y releases.
-   * `03_issues_y_etiquetas.md`: Endpoints de issues, filtros (`state`, `sort`), creación, comentarios y labels.
-   * `04_pull_requests_y_revisiones.md`: Endpoints de PRs, métodos de merge (`merge`, `squash`, `rebase`) y revisiones.
-3. **Pipeline de RAG Implementado en `TP2_Laboratorio_RAG_Agente.ipynb`:**
-   * **Carga:** `TextLoader` de LangChain.
-   * **Chunking:** `RecursiveCharacterTextSplitter` con `chunk_size=600`, `chunk_overlap=120`, adaptado a encabezados de secciones Markdown.
-   * **Embeddings:** `sentence-transformers/all-MiniLM-L6-v2` de Hugging Face.
-   * **Vector Store:** `FAISS` con persistencia en disco (`save_local`).
-   * **Retriever:** Búsqueda por similitud con $k=3$.
-   * **LLM Local:** `ChatOpenAI` conectado a Ollama local (`http://localhost:11434/v1`) usando `qwen2.5:1.5b` (ligero, sin claves externas y con soporte nativo de tool calling).
-   * **Conexión e Integración (LCEL):** Cadena `retriever | formatear_contexto` + `ChatPromptTemplate` con rol de especialista y regla anti-alucinación estricta + `llm` + `StrOutputParser()`.
-   * **Agente y Tools:** Herramientas con `@tool` (`consultar_documentacion_github`, `consultar_repositorio_github`, `calcular_cuota_rate_limit`) orquestadas en runtime ReAct interactivo.
+   * `03_issues_y_etiquetas.md`: Endpoints de issues, filtros (`state`, `sort`), creación, comentarios, conteo separado de issues/PRs vía Search API (`GET /search/issues`) y labels.
+   * `04_pull_requests_y_revisiones.md`: Endpoints de PRs, métodos de merge (`merge`, `squash`, `rebase`) y revisiones (con aclaración de estado `PENDING` al omitir `event`).
+3. **Pipeline de RAG y Agente Implementado en `TP2_Laboratorio_RAG_Agente.ipynb` y `agente_cli.py`:**
+   * **Limpieza:** Normalización de saltos de línea, eliminación de separadores `---`, marcas de negrita `**` y líneas vacías repetidas (`limpiar_markdown`).
+   * **Chunking estructural en 2 etapas:** `MarkdownHeaderTextSplitter` (corta por `#`, `##`, `###` para mantener 1 endpoint completo por chunk) + `RecursiveCharacterTextSplitter` (`chunk_size=1500`, `chunk_overlap=150`) como resguardo, anteponiendo la ruta jerárquica de encabezados (`[Documento > Sección > Subsección]`) a cada fragmento (39 chunks en total).
+   * **Embeddings Multilingües:** `intfloat/multilingual-e5-small` (384 dimensiones, normalizados, con prefijos `query: ` y `passage: `).
+   * **Vector Store y Búsqueda Híbrida:** `FAISS` (`IndexFlatIP`, similitud coseno exacta) combinado con ranking léxico **Okapi BM25** (`IndiceBM25`), fusionados mediante **Reciprocal Rank Fusion (RRF)** ($k_{RRF}=60$, top-4 fragmentos).
+   * **Evaluación Cuantitativa del Recuperador:** Benchmark sobre 16 consultas parafraseadas comparando `all-MiniLM-L6-v2` (Hit@1: 0.38, MRR: 0.48), `multilingual-e5-small` (Hit@1: 0.69, MRR: 0.78), `BM25` (Hit@1: 0.75, MRR: 0.83) e **Híbrida e5 + BM25 RRF** (Hit@1: 0.88, Hit@4: 0.94, MRR: 0.89).
+   * **LLM Local:** `ChatOllama` conectado a Ollama local (`http://localhost:11434`) usando `qwen2.5:7b` (`temperature=0`, `num_ctx=8192`).
+   * **Agente y Tools:** Orquestado con `create_agent` (ciclo ReAct con tool calling) y 3 herramientas (`consultar_documentacion_github`, `consultar_repositorio_github` con separación de issues y PRs vía `/search/issues`, y `calcular_cuota_rate_limit`).
 
 ---
 
@@ -42,38 +41,11 @@
 * [x] **Fase 1:** Organización.
 * [x] **Fase 2:** Selección del Dominio Técnico.
 * [x] **Fase 2:** Creación y Limpieza del Corpus Técnico.
-* [x] **Fase 2:** Segmentación (*Chunking*), Embeddings e Indexación con FAISS.
-* [x] **Fase 2:** Motor de Recuperación (*Retrieval*) y Validación Semántica.
+* [x] **Fase 2:** Segmentación (*Chunking*), Embeddings e Indexación con FAISS + BM25 (RRF).
+* [x] **Fase 2:** Motor de Recuperación (*Retrieval*) y Evaluación Cuantitativa (Hit@1, Hit@4, MRR).
 * [x] **Fase 3 - Parte 1:** Conexión e Integración (Vincular Retriever con el LLM mediante LCEL).
 * [x] **Fase 3 - Parte 2:** **Lógica de Agente y Herramientas (*Tools*) [COMPLETADA]**.
-* [ ] **Entregables:** **Informe Técnico (máximo 2 páginas) [PENDIENTE]**.
-
----
-
-## 4. Tareas Específicas para la Próxima Sesión
-
-Cuando el usuario pida continuar, debes abordar inmediatamente:
-
-### Tarea 1: Fase 3 - Lógica de Agente y Herramientas (*Tools*)
-Configurar el LLM como un **Agente Interactivo (ReAct)** utilizando LangChain:
-1. **Definir la Herramienta (*Tool*):**
-   * Implementar con el decorador `@tool` de LangChain al menos una herramienta complementaria:
-     * *Opción recomendada A:* `consultar_repositorio_github(owner, repo)`: consulta real vía `requests` a la API pública de GitHub para obtener metadatos en vivo (estrellas, forks, issues abiertos, descripción).
-     * *Opción recomendada B:* `calcular_cuota_rate_limit(solicitudes_por_hora, es_autenticado)` o generador de comandos cURL validados.
-2. **Definir la Herramienta de RAG (*Tool*):**
-   * Envolver el retriever en una herramienta: `consultar_documentacion_github(query: str)`.
-3. **Orquestar el Agente:**
-   * Crear el agente con `create_agent` o `AgentExecutor` conectando el LLM con la lista `[consultar_documentacion_github, tool_adicional]`.
-4. **Probar el Flujo Esperado de la Consigna:**
-   * El usuario hace una consulta compleja (ej: *"¿Cómo se crea un issue según la documentación y cuántos issues abiertos tiene actualmente el repositorio facebook/react?"*).
-   * El agente evalúa qué herramientas necesita, recupera fragmentos vía RAG, ejecuta la herramienta de consulta en vivo y genera una respuesta final integrada.
-
-### Tarea 2: Elaboración del Informe Técnico (Entregable 2)
-Redactar el informe de máximo 2 páginas que documente:
-1. Metodología de construcción, limpieza y segmentación del corpus técnico.
-2. Base vectorial elegida (FAISS) y técnica de búsqueda (similitud de cosenos).
-3. Herramienta o acción adicional que implementa el agente y descripción de su flujo paso a paso.
-4. Ejemplo real de interacción que muestre al menos 3 preguntas y sus respectivas respuestas correctas.
+* [x] **Entregables:** **Notebook Ejecutado + Informe Técnico de 2 páginas (`Informe_Tecnico_TP2.pdf` y `.docx`) [COMPLETADOS]**.
 
 ---
 

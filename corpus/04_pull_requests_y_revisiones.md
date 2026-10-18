@@ -1,4 +1,4 @@
-# Especificación Técnica: GitHub REST API - Pull Requests y Revisiones de Código
+# Pull Requests y Revisiones de Código
 
 ## 1. Endpoints para Pull Requests
 
@@ -33,7 +33,7 @@ Los *Pull Requests* (PRs) permiten proponer cambios, revisar código y realizar 
     "maintainer_can_modify": true
   }
   ```
-* **Parámetros Requeridos:**
+* **Parámetros Requeridos (campos obligatorios):**
   * `title` (string): Título descriptivo del Pull Request.
   * `head` (string): Nombre de la rama que contiene los cambios que se desean integrar. Si la rama proviene de un fork, debe tener el formato `nombre_usuario:rama`.
   * `base` (string): Nombre de la rama en la que se integrarán los cambios (ej. `main`).
@@ -104,4 +104,4 @@ Las revisiones permiten a los colaboradores auditar los cambios, dejar comentari
   * `APPROVE`: Aprueba formalmente el Pull Request para su fusión.
   * `REQUEST_CHANGES`: Solicita cambios indispensables antes de poder fusionar.
   * `COMMENT`: Deja un comentario general de revisión sin aprobar ni rechazar explícitamente.
-  * `PENDING`: Deja la revisión en estado preliminar pendiente de publicación.
+* Si se omite el campo `event`, la revisión queda en estado `PENDING` (borrador sin publicar) hasta que se envíe.

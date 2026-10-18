@@ -1,4 +1,4 @@
-# Especificación Técnica: GitHub REST API - Gestión de Repositorios y Ramas
+# Repositorios y Ramas
 
 ## 1. Endpoints para Repositorios
 
@@ -59,7 +59,7 @@
       "license_template": "mit"
     }
     ```
-  * **Parámetros Requeridos:**
+  * **Parámetros Requeridos (campos obligatorios):**
     * `name` (string): Nombre del repositorio.
   * **Parámetros Opcionales Clave:**
     * `private` (boolean): `true` para repositorio privado, `false` para público.
